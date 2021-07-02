@@ -23,6 +23,8 @@ function tokenize(input: string): BrainFuckToken[] {
                 return BrainFuckToken.NextCell;
             case "<":
                 return BrainFuckToken.PreviousCell;
+            case ".":
+                return BrainFuckToken.Output;
             default:
                 return null;
         }
@@ -35,8 +37,11 @@ function interpret(code: BrainFuckToken[]): number[] {
     let memory_pointer = 0;
     let memory = [0];
     let brace_position: number[] = [];
+    var output: number = [];
 
     while (code_pointer < code.length) {
+        console.log(`Code @ ${code_pointer} ${code[code_pointer]}`);
+        console.log(`Memory @ ${memory_pointer} ${memory[memory_pointer]}`);
         switch (code[code_pointer]) {
             case BrainFuckToken.CloseIf:
                 if (memory[memory_pointer] != 0) {
@@ -44,26 +49,27 @@ function interpret(code: BrainFuckToken[]): number[] {
                 } else {
                     brace_position.pop();
                 }
+                console.log(`Memory ${memory}`)
                 console.log(brace_position);
                 break;
             case BrainFuckToken.OpenIf:
                 brace_position.push(code_pointer);
                 break;
             case BrainFuckToken.Increment:
-                memory[code_pointer]++;
-                if (memory[code_pointer] >= 254) {
-                    memory[code_pointer] = 0;
+                memory[memory_pointer]++;
+                if (memory[memory_pointer] >= 254) {
+                    memory[memory_pointer] = 0;
                 }
                 break;
             case BrainFuckToken.Decrement:
-                memory[code_pointer]--;
-                if (memory[code_pointer] < 0) {
-                    memory[code_pointer] = 254;
+                memory[memory_pointer]--;
+                if (memory[memory_pointer] < 0) {
+                    memory[memory_pointer] = 254;
                 }
                 break;
             case BrainFuckToken.NextCell:
                 memory_pointer++;
-                if (memory_pointer >= memory.length) {
+                if (memory_pointer > memory.length - 1) {
                     memory.push(0);
                 }
                 break;
@@ -73,13 +79,15 @@ function interpret(code: BrainFuckToken[]): number[] {
                     memory_pointer = memory.length - 1;
                 }
                 break;
-        
+            case BrainFuckToken.Output:
+                output.push(memory[memory_pointer]);
+                break;
         }
 
         code_pointer++;
     }
 
-    return memory;
+    return output;
 }
 
 /** A repersentation of the BrainFuck Code  */
@@ -90,4 +98,5 @@ enum BrainFuckToken {
     Decrement,    // -
     NextCell,     // >
     PreviousCell, // <
+    Output,       // .
 }
